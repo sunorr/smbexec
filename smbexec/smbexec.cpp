@@ -13,13 +13,13 @@ int main( int argc, char ** argv )
 
     nr.dwType = RESOURCETYPE_ANY;
     nr.lpLocalName = NULL;
+    nr.lpRemoteName = "\\\\10.20.60.25\\admin$";
     //nr.lpRemoteName = "\\\\192.168.79.129\\admin$";
-    nr.lpRemoteName = "\\\\192.168.79.129\\admin$";
     nr.lpProvider =  NULL;
 
 
-    //dwRetVal = WNetAddConnection3( NULL, &nr, "nsfocus", "administrator", 0 );
-    dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
+    dwRetVal = WNetAddConnection3( NULL, &nr, "nsfocus", "administrator", 0 );
+    //dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
     if ( dwRetVal != NO_ERROR )
     {
         int a = GetLastError();
@@ -42,7 +42,6 @@ int main( int argc, char ** argv )
     WNetCancelConnection( nr.lpRemoteName, TRUE );
 
     return 0;
-
 
 
 }
