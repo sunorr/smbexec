@@ -175,6 +175,7 @@ int main( int argc, char **argv )
 #ifdef __DEBUG__
     if ( argc > 1 && argv[1][0] == 'i' )
         ServiceInstall();
+    return 0;
 #endif
 
     SERVICE_TABLE_ENTRY DispatchTable[] = 
@@ -184,8 +185,7 @@ int main( int argc, char **argv )
     };
 
     // 服务程序启动的时候必须是这个函数在响应。
-    if( !StartServiceCtrlDispatcher( DispatchTable ) )
-        return -1;
+    StartServiceCtrlDispatcher( DispatchTable );
 
     return 0;
 }
