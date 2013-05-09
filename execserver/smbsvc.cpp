@@ -4,6 +4,8 @@
 #pragma comment(lib, "advapi32.lib")
 #define __DEBUG__
 
+void ServiceDelete();
+
 void debug( char * str )
 {
 #ifdef __DEBUG__
@@ -22,7 +24,7 @@ void SetServiceStop( void )
     gStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     gStatus.dwCurrentState = SERVICE_STOPPED;
     gStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
-    gStatus.dwWin32ExitCode = 79;
+    gStatus.dwWin32ExitCode = 0;
     gStatus.dwCheckPoint = 0;
     gStatus.dwWaitHint = 0;
     SetServiceStatus( ghStatusHandle, &gStatus );
@@ -59,6 +61,7 @@ void WINAPI ServiceControl( DWORD dwOpcode )
     case SERVICE_CONTROL_STOP:
         SetEvent( ghServiceStopEvent );
         SetServiceStop();
+        ServiceDelete();
 
         break;
         
@@ -101,10 +104,34 @@ void WINAPI ServiceMain( DWORD dwArgc, LPSTR * lpszArgv )
         return;
 
     ServiceRunning( dwArgc, lpszArgv );
+
+}
+
+void ServiceDelete()
+{
+    SC_HANDLE schSCManager;
+    SC_HANDLE schService;
+
+    schSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_ALL_ACCESS );
+    if ( !schSCManager )
+        return;
+
+    schService = OpenService( schSCManager, SERVICE_NAME, DELETE );
+    if ( !schService )
+    {
+        CloseServiceHandle( schSCManager );
+        debug("nima");
+        return;
+    }
+
+    if ( !DeleteService( schService ) )
+        debug("gun");
+
+    CloseServiceHandle( schService );
+    CloseServiceHandle( schSCManager );
 }
 
 #ifdef __DEBUG__
-
 void ServiceInstall()
 {
     SC_HANDLE schSCManager;
@@ -145,8 +172,10 @@ void ServiceInstall()
 int main( int argc, char **argv )
 {
    
-    if ( argc > 2 && argv[1][0] == 'i' )
+#ifdef __DEBUG__
+    if ( argc > 1 && argv[1][0] == 'i' )
         ServiceInstall();
+#endif
 
     SERVICE_TABLE_ENTRY DispatchTable[] = 
     {
@@ -154,15 +183,9 @@ int main( int argc, char **argv )
         { NULL, NULL }
     };
 
+    // 服务程序启动的时候必须是这个函数在响应。
     if( !StartServiceCtrlDispatcher( DispatchTable ) )
-    {
-        int a = GetLastError();
-        char buf[1024] = {0};
-        _itoa( a, buf, 10 );
-        debug( buf );
-        
         return -1;
-    }
 
     return 0;
 }
