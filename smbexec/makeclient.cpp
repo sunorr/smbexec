@@ -14,7 +14,9 @@ int Client( char * szRemoteComp )
     HANDLE hPipe = NULL;
     hPipe = PipeConnect( szPipeName );
     if ( !hPipe )
+    {
         return -1;
+    }
 
 
     char szBuffer[BUFFERSIZE] = {0};
