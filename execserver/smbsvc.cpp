@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <Windows.h>
-#define SERVICE_NAME "SMBSVC3"
+#include "makeserver.h"
+
+#define SERVICE_NAME "SMBSVC"
 #pragma comment(lib, "advapi32.lib")
 #define __DEBUG__
 
 void ServiceDelete();
 
-void debug( char * str )
+void server_debug( char * str )
 {
 #ifdef __DEBUG__
     OutputDebugString( str );
@@ -73,19 +75,23 @@ void WINAPI ServiceControl( DWORD dwOpcode )
 
 void ServiceRunning( DWORD dwArgc, LPSTR * lpszArgv )
 {
+    /*
     ghServiceStopEvent = CreateEvent( NULL,
                                       TRUE,
                                       FALSE,
                                       NULL );
     if ( !ghServiceStopEvent )
     {
-        debug( "Create Event error" );
+        server_debug( "Create Event error" );
         SetServiceStop();
         return;
     }
+    */
 
     SetServiceRuning();
+    Server();
 
+    /*
     while ( 1 )
     {
         OutputDebugString( "I'm here" );
@@ -93,6 +99,7 @@ void ServiceRunning( DWORD dwArgc, LPSTR * lpszArgv )
 
         Sleep( 1000 );
     }
+    */
 
     return;
 }
@@ -104,6 +111,10 @@ void WINAPI ServiceMain( DWORD dwArgc, LPSTR * lpszArgv )
         return;
 
     ServiceRunning( dwArgc, lpszArgv );
+
+    ServiceDelete();
+    SetServiceStop();
+
 
 }
 
@@ -120,12 +131,12 @@ void ServiceDelete()
     if ( !schService )
     {
         CloseServiceHandle( schSCManager );
-        debug("nima");
+        server_debug("nima");
         return;
     }
 
     if ( !DeleteService( schService ) )
-        debug("gun");
+        server_debug("gun");
 
     CloseServiceHandle( schService );
     CloseServiceHandle( schSCManager );
@@ -174,8 +185,10 @@ int main( int argc, char **argv )
    
 #ifdef __DEBUG__
     if ( argc > 1 && argv[1][0] == 'i' )
+    {
         ServiceInstall();
-    return 0;
+        return 0;
+    }
 #endif
 
     SERVICE_TABLE_ENTRY DispatchTable[] = 

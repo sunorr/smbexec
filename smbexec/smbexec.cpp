@@ -2,8 +2,11 @@
 #include <WinNetWk.h>
 #include <string.h>
 #include <stdio.h>
+#include "makeclient.h"
 
 #pragma comment(lib, "mpr.lib")
+
+#define __DEBUG__
 
 int main( int argc, char ** argv )
 {
@@ -13,12 +16,12 @@ int main( int argc, char ** argv )
 
     nr.dwType = RESOURCETYPE_ANY;
     nr.lpLocalName = NULL;
-    nr.lpRemoteName = "\\\\10.20.60.25\\admin$";
+    nr.lpRemoteName = "\\\\10.16.101.47\\admin$";
     //nr.lpRemoteName = "\\\\192.168.79.129\\admin$";
     nr.lpProvider =  NULL;
 
 
-    dwRetVal = WNetAddConnection3( NULL, &nr, "nsfocus", "administrator", 0 );
+    dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe!@#", "administrator", 0 );
     //dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
     if ( dwRetVal != NO_ERROR )
     {
@@ -37,6 +40,8 @@ int main( int argc, char ** argv )
                         CREATE_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL,
                         NULL );
+
+    Client( "10.16.101.47" );
 
 
     WNetCancelConnection( nr.lpRemoteName, TRUE );

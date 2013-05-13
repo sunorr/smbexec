@@ -28,6 +28,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="rem copy /y &quot;d:\My Documents\Visual Studio 2008\Projects\smbexec\Debug\execserver.exe&quot; \\10.16.101.47\c$\WINDOWS\ &amp;&amp; echo 0"
+				Outputs="echo &quot;ok&quot;"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -171,7 +173,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\connetction.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\makeclient.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\smbexec.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utilities.cpp"
 				>
 			</File>
 		</Filter>
@@ -180,6 +194,18 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\connection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\makeclient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\utilities.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
