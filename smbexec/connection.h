@@ -1,7 +1,8 @@
 #ifndef __CONNECTION_H__
 #define __CONNECTION_H__
 
-#define PIPE_NAME "pipe\\SMBEXEC"
+#define PIPE_NAME_STDIN "pipe\\SMBEXEC"
+#define PIPE_NAME_STDOUT "pipe\\SMBEXEC2"
 #define REMOTE "admin$"
 #define LOCAL "%windir%"
 #define BUFFERSIZE 1024
