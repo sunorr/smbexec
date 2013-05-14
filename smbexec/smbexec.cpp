@@ -4,17 +4,23 @@
 #include <stdio.h>
 #include "makeclient.h"
 #include "utilities.h"
+#include "getopt.h"
 
 #define SERVER_DIR "%WINDIR%\\execserver.exe"
 #define SERVICE_NAME "SMBSVC"
+#define ADMIN "admin$"
+#define MAX_CMDLEN 8191
 
 #pragma comment(lib, "mpr.lib")
 
 #define __DEBUG__
 #ifdef __DEBUG__
-#define REMOTE_COMP "192.168.79.129"
-#define SERVER  "d:\\My Documents\\Project\\smbexec\\Debug\\execserver.exe"
-#define REMOTE_PATH1  "\\\\192.168.79.129\\admin$\\execserver.exe"
+//#define REMOTE_COMP "192.168.79.129"
+#define REMOTE_COMP "10.16.101.47"
+//#define SERVER  "d:\\My Documents\\Project\\smbexec\\Debug\\execserver.exe"
+#define SERVER  "d:\\My Documents\\Visual Studio 2008\\Projects\\smbexec\\Debug\\execserver.exe"
+//#define REMOTE_PATH1  "\\\\192.168.79.129\\admin$\\execserver.exe"
+#define REMOTE_PATH1  "\\\\10.16.101.47\\admin$\\execserver.exe"
 #endif
 
 
@@ -81,21 +87,73 @@ int InstallRemoteService( char *szComputerName )
 }
 
 
+
+void usage()
+{
+    printf( "" );
+    exit( -1 );
+}
+
 int main( int argc, char ** argv )
 {
     NETRESOURCE nr = {0};
-
     DWORD dwRetVal = 0;
+
+    int c = 0;
+
+    char host[32] = {0};
+    char password[32] = {0};
+    char username[32] = {0};
+    char cmd[MAX_CMDLEN] = {0};
+
+    while ( ( c = getopt( argc, argv, "h:u:p:e:") ) != -1 )
+    {
+        switch ( c )
+        {
+        // 目标ip
+        case 'h':
+            strncpy( host, optarg, 32 );
+        	break;
+
+        // 用户名
+        case 'u':
+            strncpy( username, optarg, 32 );
+        	break;
+
+        // 密码
+        case 'p':
+            strncpy( password, optarg, 32 );
+        	break;
+
+        // cmd
+        case 'e':
+            strncpy( cmd, optarg, MAX_CMDLEN );
+        	break;
+
+        default:
+            break;
+        }
+    }
+
+    char szRemoteName[MAX_PATH] = {0};
+    if ( host[0] )
+        sprintf( szRemoteName, "\\\\%s\\%s", host, ADMIN );
+    else
+        usage();
+
+    if ( !username[0] || !password[0] )
+        usage();
 
     nr.dwType = RESOURCETYPE_ANY;
     nr.lpLocalName = NULL;
     //nr.lpRemoteName = "\\\\10.16.101.47\\admin$";
-    nr.lpRemoteName = "\\\\192.168.79.129\\admin$";
+    nr.lpRemoteName = szRemoteName;
+   // nr.lpRemoteName = "\\\\192.168.79.129\\admin$";
     nr.lpProvider =  NULL;
 
 
-    //dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe!@#", "administrator", 0 );
-    dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
+    dwRetVal = WNetAddConnection3( NULL, &nr, password, username, 0 );
+    //dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
     if ( dwRetVal != NO_ERROR )
     {
         int a = GetLastError();
@@ -114,9 +172,9 @@ int main( int argc, char ** argv )
                         FILE_ATTRIBUTE_NORMAL,
                         NULL );
 
-    InstallRemoteService( REMOTE_COMP );
+    InstallRemoteService( host );
 
-    Client( REMOTE_COMP );
+    Client( host );
 
 
     WNetCancelConnection( nr.lpRemoteName, TRUE );
