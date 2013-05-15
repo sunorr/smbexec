@@ -15,4 +15,15 @@ void ClosePipe( HANDLE hPipe );
 HANDLE CreateXPipe( char * szPipeName );
 HANDLE PipeConnect( char * szPipeName );
 
+#define NAME_LEN 32
+#define PASSWD_LEN 32
+#define CMD_LEN 1024
+
+typedef struct __LOGINFO__
+{
+    char szUserName[NAME_LEN];
+    char szPassword[PASSWD_LEN];
+    char szExcuteCmd[CMD_LEN];
+}LOGINFO, *PLOGINFO;
+
 #endif

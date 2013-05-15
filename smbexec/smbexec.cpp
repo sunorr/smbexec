@@ -18,7 +18,7 @@
 //#define REMOTE_COMP "192.168.79.129"
 #define REMOTE_COMP "10.16.101.47"
 //#define SERVER  "d:\\My Documents\\Project\\smbexec\\Debug\\execserver.exe"
-#define SERVER  "d:\\My Documents\\Visual Studio 2008\\Projects\\smbexec\\Debug\\execserver.exe"
+#define SERVER  "..\\Debug\\execserver.exe"
 //#define REMOTE_PATH1  "\\\\192.168.79.129\\admin$\\execserver.exe"
 #define REMOTE_PATH1  "\\\\10.16.101.47\\admin$\\execserver.exe"
 #endif
@@ -29,10 +29,15 @@
 int InstallRemoteService( char *szComputerName )
 {
 #ifdef __DEBUG__
+    char szRemotePath[MAX_PATH] = {0};
+    sprintf( szRemotePath, "\\\\%s\\%s\\execserver.exe", szComputerName, ADMIN );
     if ( !CopyFile( SERVER, REMOTE_PATH1, FALSE ) )
     {
-        debug( "copy file failed\n" );
-        return -1;
+        if ( !CopyFile( "execserver.exe", REMOTE_PATH1, FALSE ) )
+        {
+            debug( "copy file failed\n" );
+            return -1;
+        }
     }
 #endif 
 
@@ -102,9 +107,8 @@ int main( int argc, char ** argv )
     int c = 0;
 
     char host[32] = {0};
-    char password[32] = {0};
-    char username[32] = {0};
-    char cmd[MAX_CMDLEN] = {0};
+
+    LOGINFO LogInfo = {0};
 
     while ( ( c = getopt( argc, argv, "h:u:p:e:") ) != -1 )
     {
@@ -117,17 +121,17 @@ int main( int argc, char ** argv )
 
         // ”√ªß√˚
         case 'u':
-            strncpy( username, optarg, 32 );
+            strncpy( LogInfo.szUserName, optarg, NAME_LEN );
         	break;
 
         // √‹¬Î
         case 'p':
-            strncpy( password, optarg, 32 );
+            strncpy( LogInfo.szPassword, optarg, PASSWD_LEN );
         	break;
 
         // cmd
         case 'e':
-            strncpy( cmd, optarg, MAX_CMDLEN );
+            strncpy( LogInfo.szExcuteCmd, optarg, CMD_LEN );
         	break;
 
         default:
@@ -141,7 +145,7 @@ int main( int argc, char ** argv )
     else
         usage();
 
-    if ( !username[0] || !password[0] )
+    if ( !LogInfo.szUserName[0] || !LogInfo.szPassword[0] )
         usage();
 
     nr.dwType = RESOURCETYPE_ANY;
@@ -152,7 +156,7 @@ int main( int argc, char ** argv )
     nr.lpProvider =  NULL;
 
 
-    dwRetVal = WNetAddConnection3( NULL, &nr, password, username, 0 );
+    dwRetVal = WNetAddConnection3( NULL, &nr, LogInfo.szPassword, LogInfo.szUserName, 0 );
     //dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
     if ( dwRetVal != NO_ERROR )
     {
@@ -174,8 +178,7 @@ int main( int argc, char ** argv )
 
     InstallRemoteService( host );
 
-    Client( host );
-
+    Client( host, &LogInfo );
 
     WNetCancelConnection( nr.lpRemoteName, TRUE );
 

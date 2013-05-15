@@ -8,10 +8,10 @@ int ExecuteCmd( HANDLE hPipeStdin, HANDLE hPipeStdout, char *szUser, char *szPas
 {
     PROCESS_INFORMATION     pi = {0};
     STARTUPINFO             si = {0};
-    SECURITY_ATTRIBUTES     psa={sizeof(psa),NULL,TRUE};
 
     HANDLE                  hToken;
 
+    debug( szCmd );
     if ( !LogonUser( szUser,
                      NULL,
                      szPassword,
@@ -22,6 +22,7 @@ int ExecuteCmd( HANDLE hPipeStdin, HANDLE hPipeStdout, char *szUser, char *szPas
         debug( "LogonUser error:%d\n", GetLastError() );
         return -1;
     }
+
 
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags = STARTF_USESTDHANDLES;
@@ -46,21 +47,11 @@ int ExecuteCmd( HANDLE hPipeStdin, HANDLE hPipeStdout, char *szUser, char *szPas
     }
     else
     {
-        debug( "I'm out!!!:%d\n", GetLastError() );
         WaitForSingleObject( pi.hProcess, INFINITE );
+        debug( "I'm out!!!:%d\n", GetLastError() );
     }
 
-    int ret = 0;
-    char szBuffer[BUFFERSIZE] = {0};
-    DWORD len = 0;
-    while ( 1)
-    {
-        ret = PeekNamedPipe( hPipeStdout, szBuffer, BUFFERSIZE, &len, 0, 0 );
-        if ( ret )
-            debug( szBuffer );
-
-
-    }
+    return 0;
 }
 
 int Server()
@@ -82,27 +73,17 @@ int Server()
     if ( !hPipeStdout )
         return -1;
 
-    ExecuteCmd( hPipeStdin, hPipeStdout, "administrator", "123qwe!@#", "cmd.exe" );
-    /*
-    while ( 1 )
+
+    LOGINFO LogInfo = {0};
+    r = PipeRecv( hPipeStdin, (char *)&LogInfo, sizeof(LOGINFO) );
+    if ( r < 0 )
     {
-        r = PipeRecv( hPipe, szBuffer, BUFFERSIZE );
-        if ( r > 0 )
-            debug( szBuffer );
-        else
-            break;
-
-        if ( strcmp( szBuffer, "exit" ) == 0 )
-            break;
-
-        r = PipeSend( hPipe, szBuffer, BUFFERSIZE );
-        if ( r > 0 )
-            debug( "ok\n" );
-        else
-            break;
-
+        return -1;
     }
-    */
+    debug( "user: %s password: %s cmd: %s\n", LogInfo.szUserName, LogInfo.szPassword, LogInfo.szExcuteCmd );
+
+
+    ExecuteCmd( hPipeStdin, hPipeStdout, LogInfo.szUserName, LogInfo.szPassword, LogInfo.szExcuteCmd );
 
     ClosePipe( hPipeStdin );
     ClosePipe( hPipeStdout );

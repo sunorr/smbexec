@@ -177,6 +177,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\getopt.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\makeclient.cpp"
 				>
 			</File>
@@ -196,6 +200,10 @@
 			>
 			<File
 				RelativePath=".\connection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\getopt.h"
 				>
 			</File>
 			<File

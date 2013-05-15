@@ -1,60 +1,49 @@
 #include <Windows.h>
 #include <stdio.h>
+#include <process.h>
 #include "utilities.h"
 #include "connection.h"
 
+int backspase = 0;
 
-int ExecuteCmd( HANDLE hPipe, char *szUser, char *szPassword, char *szCmd  )
+typedef struct __THREAD_ARGS__
 {
-    PROCESS_INFORMATION     pi = {0};
-    STARTUPINFO             si = {0};
-    SECURITY_ATTRIBUTES     psa={sizeof(psa),NULL,TRUE};
+    HANDLE hPipeStdin;
+    HANDLE hPipeStdout;
+}THREAD_ARGS, *PTHREAD_ARGS;
 
-    HANDLE                  hToken;
+UINT __stdcall ThreadGets( void * argument )
+{
 
-    if ( !LogonUser( szUser,
-        NULL,
-        szPassword,
-        LOGON32_LOGON_INTERACTIVE,
-        LOGON32_PROVIDER_DEFAULT,
-        &hToken ) )
+    char szInteractive[CMD_LEN] = {0};
+    int len = 0;
+    int r = 0;
+    PTHREAD_ARGS t = (PTHREAD_ARGS)argument;
+
+    while ( 1 )
     {
-        debug( "LogonUser error:%d\n", GetLastError() );
-        return -1;
-    }
 
-    si.cb = sizeof(STARTUPINFO);
-    si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdError = hPipe;
-    si.hStdInput = hPipe;
-    si.hStdOutput = hPipe;
+        gets( szInteractive );
+        len = strlen( szInteractive );
+        szInteractive[len] = '\r';
+        szInteractive[len + 1] = '\n';
+        szInteractive[len + 2] = 0;
 
-    if ( !CreateProcessAsUser( hToken, 
-        NULL,
-        szCmd,
-        NULL,
-        NULL,
-        TRUE,
-        CREATE_NO_WINDOW,
-        NULL,
-        NULL,
-        &si,
-        &pi ) )
-    {
-        debug( "CreateProcessAsUser error:%d\n", GetLastError() );
-        return -1;
-    }
-    else
-    {
-        WaitForSingleObject( pi.hProcess, INFINITE );
-    }
 
+        r = PipeSend( t->hPipeStdin, szInteractive, 0  );
+        if ( r < 0 )
+            goto err;
+
+        backspase = 0;
+    }
+err:
+    _endthreadex(0) ;
     return 0;
 }
 
 
 
-int Client( char * szRemoteComp )
+int Client( char * szRemoteComp, PLOGINFO pLogInfo )
 {
     char szPipeName[MAX_PATH] = {0};
 
@@ -74,19 +63,34 @@ int Client( char * szRemoteComp )
 
     char szBuffer[BUFFERSIZE] = {0};
 
+    DWORD len = BUFFERSIZE;
     int r = 0;
+
+    // 发送指令让服务器运转
+    r = PipeSend( hPipeStdin, (char *)pLogInfo, sizeof(LOGINFO) );
+    if ( r < 0 )
+        return -1;
+
+
+    THREAD_ARGS t; 
+    t.hPipeStdin = hPipeStdin;
+
+    _beginthreadex( NULL, NULL, ThreadGets, &t, 0, NULL );
+
     while ( 1 )
     {
-        r = PipeSend( hPipeStdin, "pwd", MAX_PATH );
-        if ( r < 0 )
-            break;
-       
-
+        memset( szBuffer, 0, BUFFERSIZE );
         r = PipeRecv( hPipeStdout, szBuffer, BUFFERSIZE );
         if ( r < 0 )
             break;
         else
-            debug( szBuffer );
+        {
+            if ( backspase )
+                debug( szBuffer );
+            else
+                backspase = 1;
+        }
+
     }
         
 

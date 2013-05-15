@@ -13,10 +13,10 @@ int PipeRecv( HANDLE hPipe, char * szBuffer, DWORD dwSize )
     DWORD dwRead = 0;
 
     fSuccess = ReadFile( hPipe, 
-        szBuffer,
-        dwSize,
-        &dwRead,
-        NULL );
+                         szBuffer,
+                         dwSize,
+                         &dwRead,
+                         NULL );
 
     if ( !fSuccess )
     {
@@ -32,16 +32,38 @@ int PipeSend( HANDLE hPipe, char * szBuffer, DWORD dwSize )
     BOOL fSuccess = FALSE;
     DWORD dwWrite = 0;
 
-    fSuccess = WriteFile( hPipe, 
-                          szBuffer,
-                          dwSize,
-                          &dwWrite,
-                          NULL );
-
-    if ( !fSuccess )
+    int i = 0;
+    if ( !dwSize )
     {
-        debug( "write pipe error:%d\n", GetLastError() );
-        return -1;
+        for( i = 0; i < strlen(szBuffer); i++ )
+        {
+
+            fSuccess = WriteFile( hPipe, 
+                                  szBuffer + i ,
+                                  1,
+                                  &dwWrite,
+                                  NULL );
+
+            if ( !fSuccess )
+            {
+                debug( "write pipe error:%d\n", GetLastError() );
+                return -1;
+            }
+        }
+    }
+    else
+    {
+        fSuccess = WriteFile( hPipe, 
+                              szBuffer,
+                              dwSize,
+                              &dwWrite,
+                              NULL );
+
+        if ( !fSuccess )
+        {
+            debug( "write pipe error:%d\n", GetLastError() );
+            return -1;
+        }
     }
 
     return dwWrite;
@@ -59,7 +81,10 @@ void ClosePipe( HANDLE hPipe )
 HANDLE CreateXPipe( char * szPipeName )
 {
     HANDLE hPipe = NULL;
+    // inheritance 必须为true 才可以使用 STARTF_USESTDHANDLES
+    SECURITY_ATTRIBUTES sa =  { sizeof(sa), NULL, TRUE };
     debug( "hPipeName:%s\n", szPipeName );
+
     hPipe = CreateNamedPipe( szPipeName, 
                              PIPE_ACCESS_DUPLEX,
                              PIPE_TYPE_MESSAGE | 
@@ -69,13 +94,12 @@ HANDLE CreateXPipe( char * szPipeName )
                              BUFFERSIZE,
                              BUFFERSIZE,
                              0,
-                             NULL );
+                             &sa );
     if ( hPipe == INVALID_HANDLE_VALUE )
     {
         debug( "CreateNamePipe error:%d\n", GetLastError() );
         return NULL;
     }
-    debug( "hPipe:0x%x\n", hPipe );
 
     BOOL fconnect = ConnectNamedPipe( hPipe, NULL );
     if ( !fconnect )
