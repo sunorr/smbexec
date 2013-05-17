@@ -33,8 +33,6 @@ UINT __stdcall ThreadGets( void * argument )
         r = PipeSend( t->hPipeStdin, szInteractive, 0  );
         if ( r < 0 )
             goto err;
-
-        backspase = 0;
     }
 err:
     _endthreadex(0) ;
@@ -84,13 +82,7 @@ int Client( char * szRemoteComp, PLOGINFO pLogInfo )
         if ( r < 0 )
             break;
         else
-        {
-            if ( backspase )
-                debug( szBuffer );
-            else
-                backspase = 1;
-        }
-
+            debug( szBuffer );
     }
         
 

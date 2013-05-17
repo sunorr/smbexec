@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "makeserver.h"
 
+
 #define SERVICE_NAME "SMBSVC"
 #pragma comment(lib, "advapi32.lib")
 #define __DEBUG__

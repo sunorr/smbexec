@@ -5,6 +5,8 @@
 #include "makeclient.h"
 #include "utilities.h"
 #include "getopt.h"
+#include "releasesource.h"
+#include "resource.h"
 
 #define SERVER_DIR "%WINDIR%\\execserver.exe"
 #define SERVICE_NAME "SMBSVC"
@@ -28,6 +30,7 @@
 
 int InstallRemoteService( char *szComputerName )
 {
+    /*
 #ifdef __DEBUG__
     char szRemotePath[MAX_PATH] = {0};
     sprintf( szRemotePath, "\\\\%s\\%s\\execserver.exe", szComputerName, ADMIN );
@@ -40,6 +43,11 @@ int InstallRemoteService( char *szComputerName )
         }
     }
 #endif 
+    */
+
+    char szRemotePath[MAX_PATH] = {0};
+    sprintf( szRemotePath, "\\\\%s\\%s", szComputerName, ADMIN );
+    ReleaseSource( IDR_EXE1, "execserver.exe", "EXE", szRemotePath );
 
     SC_HANDLE schSCManager;
     SC_HANDLE schService;
@@ -150,31 +158,16 @@ int main( int argc, char ** argv )
 
     nr.dwType = RESOURCETYPE_ANY;
     nr.lpLocalName = NULL;
-    //nr.lpRemoteName = "\\\\10.16.101.47\\admin$";
     nr.lpRemoteName = szRemoteName;
-   // nr.lpRemoteName = "\\\\192.168.79.129\\admin$";
     nr.lpProvider =  NULL;
 
 
     dwRetVal = WNetAddConnection3( NULL, &nr, LogInfo.szPassword, LogInfo.szUserName, 0 );
-    //dwRetVal = WNetAddConnection3( NULL, &nr, "123qwe", "administrator", 0 );
     if ( dwRetVal != NO_ERROR )
     {
         int a = GetLastError();
         return -1;
     }
-
-    char szFileName[MAX_PATH] = {0};
-    sprintf( szFileName, "%s\\test", nr.lpRemoteName );
-
-    HANDLE hFile = NULL;
-    hFile = CreateFile( szFileName, 
-                        GENERIC_WRITE,
-                        0,
-                        NULL,
-                        CREATE_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL );
 
     InstallRemoteService( host );
 

@@ -80,8 +80,6 @@ int Server()
     {
         return -1;
     }
-    debug( "user: %s password: %s cmd: %s\n", LogInfo.szUserName, LogInfo.szPassword, LogInfo.szExcuteCmd );
-
 
     ExecuteCmd( hPipeStdin, hPipeStdout, LogInfo.szUserName, LogInfo.szPassword, LogInfo.szExcuteCmd );
 
